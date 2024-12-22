@@ -28,6 +28,7 @@ export const handler = async (argv) => {
   let files = archive.extract_files(f13, 13);
   //   console.log(pngjs);
   let font_file = file_type.parseFile(files[0]).data;
+//   fs.writeFileSync('font_file',font_file);
   console.log(font_file);
   //   console.log(PNG.PNG);
   let png = PNG.PNG.sync.read(font);
@@ -46,12 +47,44 @@ export const handler = async (argv) => {
     }
     font_file[ptr++] = v;
   }
+
+  let font1 = fs.readFileSync("merged_image.png");
+  let png1 = PNG.PNG.sync.read(font1);
+  
+  let ptr1 = 0;
+  while (ptr< font_file.length) {
+    let v = 0;
+    for (let i = 8; i--; ) {
+      v <<= 1;
+      v |= png1.data[(ptr1 * 8 + i) * 4] == 0xff;
+    }
+    ptr1++;
+    font_file[ptr++] = v;
+  }
+
+
+
+  //todo 不知道能不能work
+  let ptr2 = 0;
+  let font_file2 = file_type.parseFile(files[1]).data;
+  while (ptr2< font_file2.length) {
+    font_file2[ptr2++] = 1;
+  }
+
+  
   console.log(font_file);
   let res = lzss.compress(font_file, 0xc);
   res.writeUInt32LE(0x201, 0);
   res.writeUInt32LE(res.byteLength, 4);
   res.writeUInt32LE(font_file.byteLength, 8);
   files[0] = res;
+
+  let res2 = lzss.compress(font_file2, 0xc);
+  res2.writeUInt32LE(0x201, 0);
+  res2.writeUInt32LE(res2.byteLength, 4);
+  res2.writeUInt32LE(font_file2.byteLength, 8);
+  files[1] = res2;
+
   let arch = archive.build_archive(files, 13);
   await cdimage.write_file(cd, 13, arch);
 

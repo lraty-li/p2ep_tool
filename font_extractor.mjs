@@ -26,6 +26,7 @@ let rows = lower_count / chars_per_row;
 let gen_file = (buff, width) => {
   let height = (buff.byteLength * 8) / width;
   let ptr = 0;
+  // 多推了个1？  \n1
   let img = [`P2\n${width} ${height}\n1`];
   while (ptr < buff.byteLength) {
     let c = buff[ptr++];
